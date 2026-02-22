@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Simulador</title>
+
+    <!-- ===============================
+         CSS PRINCIPAL
+    =============================== -->
+    <link rel="stylesheet" href="style.css">
+
+    <!-- ===============================
+         LEAFLET CSS
+    =============================== -->
+    <link rel="stylesheet"
+          href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+</head>
+
+<body>
+
+    <!-- BOTÓN TOGGLE -->
+    <div id="sidebarToggle">☰</div>
+
+    <!-- SIDEBAR -->
+    <div id="sidebar" class="open">
+
+        <div class="sidebar-header">
+            <h2>SIMULADOR</h2>
+        </div>
+
+        <!-- ===============================
+             GRUPO: SIMULACIÓN
+        =============================== -->
+        <div class="menu-group">
+            <div class="group-title">SIMULACIÓN</div>
+
+            <button id="createPlaneBtn" class="menu-btn">
+                Crear Aeronave
+            </button>
+
+            <button id="deletePlaneBtn" class="menu-btn">
+                Eliminar Aeronave
+            </button>
+        </div>
+
+        <!-- ===============================
+             GRUPO: NAVEGACIÓN
+        =============================== -->
+        <div class="menu-group">
+            <div class="group-title">NAVEGACIÓN</div>
+
+            <button id="showVorBtn" class="menu-btn">
+                Mostrar VOR
+            </button>
+        </div>
+
+        <!-- ===============================
+             GRUPO: TRÁFICO
+        =============================== -->
+        <div class="menu-group">
+            <div class="group-title">TRÁFICO</div>
+
+            <button id="radarBtn" class="menu-btn">
+                Radar
+            </button>
+        </div>
+
+    </div>
+
+    <!-- MAPA -->
+    <div id="map"></div>
+
+    <!-- LIBRERÍAS -->
+    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
+    <script src="/socket.io/socket.io.js"></script>
+    <script src="client.js"></script>
+
+</body>
+</html>

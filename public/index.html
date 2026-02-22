@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8" />
+    <title>Seleccionar Sala</title>
+
+    <!-- ===============================
+         CSS PRINCIPAL
+    =============================== -->
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- ===============================
+         CONTENEDOR PRINCIPAL
+    =============================== -->
+    <div class="container">
+
+        <h1>Simulador de Vuelo</h1>
+
+        <!-- ===============================
+             SECCIÓN SALAS
+        =============================== -->
+        <div class="room-section">
+
+            <!-- 🔹 AGREGÁ MÁS INPUTS O CONTROLES AQUÍ -->
+            <input type="text" id="roomInput" placeholder="Nombre de la sala">
+
+            <button id="joinBtn">Unirse</button>
+
+        </div>
+
+        <!-- 🔹 AGREGÁ MÁS PANELES AQUÍ (estadísticas, login, etc.) -->
+
+    </div>
+
+    <!-- ===============================
+         SCRIPTS
+    =============================== -->
+    <script>
+        document.getElementById("joinBtn").addEventListener("click", () => {
+            const room = document.getElementById("roomInput").value || "sala1";
+            localStorage.setItem("room", room);
+            window.location.href = "simulador.html";
+        });
+    </script>
+
+</body>
+</html>
