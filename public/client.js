@@ -67,26 +67,58 @@ showVorBtn.addEventListener("click", () => {
     console.log("Mostrar VOR");
 });
 // ===============================
-// SIDEBAR TOGGLE
+// TOGGLE PANEL IZQUIERDO
 // ===============================
 
-const sidebar = document.getElementById("sidebar");
-const toggleBtn = document.getElementById("sidebarToggle");
+function togglePanelIzq() {
+  const panel = document.getElementById("panelLateralIzq");
+  const icono = document.getElementById("iconoLateral");
 
-toggleBtn.addEventListener("click", () => {
+  panel.classList.toggle("cerrado");
 
-    sidebar.classList.toggle("closed");
+  if (panel.classList.contains("cerrado")) {
+    icono.innerHTML = "‹";
+  } else {
+    icono.innerHTML = "›";
+  }
+}
 
-});
-createBtn.addEventListener("click", () => {
-    createMode = !createMode;
-    deleteMode = false;
-});
+// ===============================
+// LANDING CONTROL
+// ===============================
 
-deleteBtn.addEventListener("click", () => {
-    deleteMode = !deleteMode;
-    createMode = false;
-});
+function togglePanelIzq(){
+    const panel = document.getElementById("panelLateralIzq");
+    panel.classList.toggle("activo");
+}
+
+function toggleCleared(btn){
+
+    const opciones = document.getElementById("landingOpciones");
+
+    btn.classList.toggle("activo");
+    opciones.classList.toggle("activo");
+}
+
+function activarPrincipal(btn){
+
+    document.querySelectorAll(".landing-main")
+        .forEach(b=>b.classList.remove("activo"));
+
+    btn.classList.add("activo");
+}
+
+function seleccionarSubOpcion(btn){
+
+    document.querySelectorAll(".mini-btn")
+        .forEach(b=>b.classList.remove("activo"));
+
+    btn.classList.add("activo");
+}
+
+
+
+
 
 // ===============================
 // MAP CLICK
@@ -173,3 +205,31 @@ socket.on("state", (planesByUser) => {
 // ===============================
 
 // socket.emit("miEvento", {...});
+// 
+
+// ============DOC==================
+
+/* =========================================
+   FAB - BOTÓN FLOTANTE
+========================================= */
+
+document.addEventListener("DOMContentLoaded", () => {
+
+    const fabMain = document.getElementById("fabMain");
+    const fabOptions = document.getElementById("fabOptions");
+
+    if (!fabMain || !fabOptions) {
+        console.log("FAB no encontrado en el DOM");
+        return;
+    }
+
+    fabMain.addEventListener("click", () => {
+
+        fabOptions.classList.toggle("active");
+
+        fabMain.textContent =
+            fabOptions.classList.contains("active") ? "×" : "+";
+
+    });
+
+});

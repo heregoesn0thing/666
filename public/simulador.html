@@ -1,80 +1,212 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
-    <meta charset="utf-8" />
-    <title>Simulador</title>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Simulador ATC</title>
 
-    <!-- ===============================
-         CSS PRINCIPAL
-    =============================== -->
-    <link rel="stylesheet" href="style.css">
+<!-- CSS -->
+<link rel="stylesheet" href="style.css">
 
-    <!-- ===============================
-         LEAFLET CSS
-    =============================== -->
-    <link rel="stylesheet"
-          href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+<!-- Leaflet -->
+<link rel="stylesheet"
+      href="https://unpkg.com/leaflet/dist/leaflet.css"/>
+
 </head>
-
 <body>
 
-    <!-- BOTÓN TOGGLE -->
-    <!-- SIDEBAR -->
-    <div id="sidebar" class="open">
+<!-- ===============================
+     MAPA
+================================= -->
+<div id="map"></div>
 
-    <div id="sidebarToggle">☰</div>
 
-    <div class="sidebar-header">
-        <h2>SIMULADOR</h2>
+<!-- ===============================
+     PANEL MENU CONTROLES
+================================= -->
+<div id="menuControles">
+
+  <div class="contenido-lateral">
+
+    <!-- GRUPO GENERAL -->
+    <div class="grupo">
+      <div class="titulo-grupo">GENERAL</div>
+      <button class="btn-lateral" id="createPlaneBtn">Crear Aeronave</button>
+      <button class="btn-lateral" id="deletePlaneBtn">Eliminar Aeronave</button>
     </div>
 
-        <!-- ===============================
-             GRUPO: SIMULACIÓN
-        =============================== -->
-        <div class="menu-group">
-            <div class="group-title">SIMULACIÓN</div>
+    <!-- GRUPO LANDING CONTROL -->
+    <div class="grupo">
 
-            <button id="createPlaneBtn" class="menu-btn">
-                Crear Aeronave
-            </button>
+      <div class="titulo-grupo">LANDING CONTROL</div>
 
-            <button id="deletePlaneBtn" class="menu-btn">
-                Eliminar Aeronave
-            </button>
-        </div>
+      <!-- Botones principales en fila -->
+      <div class="landing-principales">
 
-        <!-- ===============================
-             GRUPO: NAVEGACIÓN
-        =============================== -->
-        <div class="menu-group">
-            <div class="group-title">NAVEGACIÓN</div>
+        <button class="btn-lateral landing-main"
+                onclick="toggleCleared(this)">
+          CLEARED
+        </button>
 
-            <button id="showVorBtn" class="menu-btn">
-                Mostrar VOR
-            </button>
-        </div>
+        <button class="btn-lateral landing-main touch"
+                onclick="activarPrincipal(this)">
+          T&G
+        </button>
 
-        <!-- ===============================
-             GRUPO: TRÁFICO
-        =============================== -->
-        <div class="menu-group">
-            <div class="group-title">TRÁFICO</div>
+        <button class="btn-lateral landing-main goaround"
+                onclick="activarPrincipal(this)">
+          GO AROUND
+        </button>
 
-            <button id="radarBtn" class="menu-btn">
-                Radar
-            </button>
-        </div>
+      </div>
+
+      <!-- Subopciones CLEARED -->
+      <div class="landing-opciones" id="landingOpciones">
+
+        <button class="mini-btn"
+                onclick="seleccionarSubOpcion(this)">A</button>
+
+        <button class="mini-btn"
+                onclick="seleccionarSubOpcion(this)">B</button>
+
+        <button class="mini-btn"
+                onclick="seleccionarSubOpcion(this)">C</button>
+
+        <button class="mini-btn"
+                onclick="seleccionarSubOpcion(this)">D</button>
+
+        <button class="mini-btn"
+                onclick="seleccionarSubOpcion(this)">E</button>
+
+      </div>
 
     </div>
+    <!-- ===============================
+     GRUPO OPERACIONES
+================================= -->
+<div class="grupo">
+  <div class="titulo-grupo">OPERACIONES</div>
 
-    <!-- MAPA -->
-    <div id="map"></div>
+  <button class="btn-lateral">Iniciar Sim</button>
+  <button class="btn-lateral">Pausar Sim</button>
+  <button class="btn-lateral">Reset Sim</button>
+</div>
 
-    <!-- LIBRERÍAS -->
-    <script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
-    <script src="https://unpkg.com/leaflet-rotatedmarker/leaflet.rotatedMarker.js"></script>
-    <script src="/socket.io/socket.io.js"></script>
-    <script src="client.js"></script>
+
+<!-- ===============================
+     GRUPO RADAR
+================================= -->
+<div class="grupo">
+  <div class="titulo-grupo">RADAR</div>
+
+  <button class="btn-lateral">Mostrar Tags</button>
+  <button class="btn-lateral">Ocultar Tags</button>
+  <button class="btn-lateral">Modo Nocturno</button>
+</div>
+
+
+<!-- ===============================
+     GRUPO COMUNICACIONES
+================================= -->
+<div class="grupo">
+  <div class="titulo-grupo">COMUNICACIONES</div>
+
+  <button class="btn-lateral">Contact Tower</button>
+  <button class="btn-lateral">Contact Approach</button>
+  <button class="btn-lateral">Contact Ground</button>
+</div>
+
+  </div>
+
+  <!-- Botón lateral desplegable -->
+  <div class="boton-lateral" onclick="togglePanelIzq()">
+    <span id="iconoLateral">›</span>
+  </div>
+
+</div>
+
+<!-- =========================================
+     BOTÓN FLOTANTE INFERIOR DERECHO
+========================================= -->
+
+<div id="fabContainer">
+
+  <button id="fabMain">+</button>
+
+  <div class="fab-options" id="fabOptions">
+    <button class="fab-btn">F1</button>
+    <button class="fab-btn">F2</button>
+    <button class="fab-btn">F3</button>
+    <button class="fab-btn">F4</button>
+    <button class="fab-btn">F5</button>
+  </div>
+
+</div>
+<!-- ===============================
+     LIBRERÍAS
+================================= -->
+
+<script src="https://unpkg.com/leaflet/dist/leaflet.js"></script>
+<script src="/socket.io/socket.io.js"></script>
+<script src="client.js"></script>
+
+
+<!-- ===============================
+     UI SCRIPT
+================================= -->
+<script>
+
+/* ===============================
+   PANEL DESPLEGABLE
+================================= */
+
+function togglePanelIzq(){
+    const panel = document.getElementById("menuControles");
+    const icono = document.getElementById("iconoLateral");
+
+    panel.classList.toggle("activo");
+
+    icono.textContent =
+        panel.classList.contains("activo") ? "‹" : "›";
+}
+
+
+/* ===============================
+   LANDING CONTROL
+================================= */
+
+function activarPrincipal(btn){
+    document
+      .querySelectorAll(".landing-main")
+      .forEach(b => b.classList.remove("activo"));
+
+    btn.classList.add("activo");
+
+    document
+      .getElementById("landingOpciones")
+      .classList.remove("activo");
+}
+
+function toggleCleared(btn){
+
+    activarPrincipal(btn);
+
+    const opciones =
+        document.getElementById("landingOpciones");
+
+    opciones.classList.toggle("activo");
+}
+
+function seleccionarSubOpcion(btn){
+
+    document
+      .querySelectorAll(".mini-btn")
+      .forEach(b => b.classList.remove("activo"));
+
+    btn.classList.add("activo");
+}
+
+</script>
 
 </body>
 </html>

@@ -1,193 +1,375 @@
-/*public/
-│
-├── index.html
-├── simulador.html
-├── style.css
-│
-├── js/
-│   ├── globals.js
-│   ├── map.js
-│   ├── sockets.js
-│   ├── planes.js
-│   └── ui.js
+/* =========================================
+   RESET GLOBAL
+========================================= */
 
-*/
-
-.home {
-    height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background: #1e1e2f;
-    color: white;
+*{
+  box-sizing:border-box;
 }
 
-.container {
-    text-align: center;
+html, body{
+  margin:0;
+  padding:0;
+  height:100%;
+  overflow:hidden;
+  font-family:"Segoe UI", sans-serif;
+  background:#0b0f1a;
 }
 
-button {
-    padding: 15px 30px;
-    margin: 10px;
-    font-size: 18px;
-    cursor: pointer;
-    border: none;
-    border-radius: 8px;
-    background: #4CAF50;
-    color: white;
-}
-
-button:hover {
-    background: #45a049;
-}
-
-.room-label {
-    position: absolute;
-    top: 10px;
-    left: 10px;
-    background: white;
-    padding: 10px;
-    border-radius: 8px;
-    font-weight: bold;
-    z-index: 1000;
-}
-
-/* ===============================
-   BASE
-================================ */
-
-body {
-    margin: 0;
-    font-family: 'Segoe UI', sans-serif;
-    overflow: hidden;
-    background-color: #0f1117;
-}
-
-/* ===============================
-   SIDEBAR
-================================ */
-
-#sidebar {
-    position: absolute;
-    left: 0;
-    top: 0;
-    width: 280px;
-    height: 100vh;
-    background: linear-gradient(180deg, #1a1d26, #141720);
-    color: #e0e0e0;
-    padding: 20px;
-    box-sizing: border-box;
-    overflow-y: auto;
-    transition: transform 0.3s ease;
-    box-shadow: 4px 0 15px rgba(0,0,0,0.5);
-    z-index: 1000;
-}
-
-/* Estado cerrado */
-#sidebar.closed {
-    transform: translateX(-280px);
-}
-
-
-/* ===============================
-   HEADER
-================================ */
-
-.sidebar-header {
-    text-align: center;
-    margin-bottom: 25px;
-}
-
-.sidebar-header h2 {
-    margin: 0;
-    font-weight: 600;
-    letter-spacing: 2px;
-    color: #4cafef;
-}
-
-/* ===============================
-   GRUPOS
-================================ */
-
-.menu-group {
-    margin-bottom: 30px;
-}
-
-.group-title {
-    font-size: 12px;
-    letter-spacing: 1px;
-    margin-bottom: 10px;
-    color: #8a8f9f;
-    border-bottom: 1px solid #2a2f3a;
-    padding-bottom: 5px;
-}
-
-/* ===============================
-   BOTONES
-================================ */
-
-.menu-btn {
-    width: 100%;
-    padding: 10px;
-    margin-bottom: 10px;
-    border: none;
-    border-radius: 6px;
-    cursor: pointer;
-    background: #232733;
-    color: #e0e0e0;
-    transition: all 0.2s ease;
-    font-size: 14px;
-}
-
-.menu-btn:hover {
-    background: #2f3545;
-}
-
-.menu-btn.active {
-    background: #4cafef;
-    color: white;
-}
-
-.menu-btn:disabled {
-    background: #444;
-    cursor: not-allowed;
-    opacity: 0.5;
-}
-
-/* ===============================
-   BOTÓN TOGGLE
-================================ */
-
-#sidebarToggle {
-    position: absolute;
-    top: 15px;
-    right: -40px; /* Lo deja pegado al borde */
-    width: 35px;
-    height: 35px;
-    background: #1f2430;
-    color: white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    cursor: pointer;
-    border-radius: 6px;
-    box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
-}
-
-/* ===============================
+/* =========================================
    MAPA
-================================ */
+========================================= */
 
-#map {
-    position: absolute;
-    left: 280px;
-    top: 0;
-    right: 0;
-    bottom: 0;
-    transition: left 0.3s ease;
+#map{
+  position:absolute;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  z-index:1;
 }
 
-/* Cuando sidebar está cerrado */
-#sidebar.closed ~ #map {
-    left: 0;
+/* =========================================
+   VARIABLES Z-INDEX
+========================================= */
+
+:root{
+  --z-map:1;
+  --z-ui:1000;
+  --z-panel:2000;
+  --z-modal:3000;
+}
+
+/* =========================================
+   PANEL LATERAL IZQUIERDO
+========================================= */
+
+#menuControles{
+  position:fixed;
+  top:50%;
+  left:0;
+  transform:translate(-260px,-50%);
+  transition:transform 0.35s ease;
+  display:flex;
+  align-items:center;
+  z-index:var(--z-panel);
+}
+
+#menuControles.activo{
+  transform:translate(0,-50%);
+}
+
+/* PANEL INTERNO */
+
+.contenido-lateral{
+  width:260px;
+  padding:20px;
+  border-radius:0 16px 16px 0;
+
+  background:linear-gradient(180deg,#111827,#0f172a);
+  border-right:1px solid rgba(255,255,255,0.05);
+
+  box-shadow:0 20px 50px rgba(0,0,0,0.7);
+  backdrop-filter:blur(10px);
+
+  display:flex;
+  flex-direction:column;
+  gap:25px;
+}
+
+/* BOTÓN DESPLEGAR */
+
+.boton-lateral{
+  width:28px;
+  height:90px;
+
+  background:#1f2433;
+  border:none;
+  color:#aaa;
+
+  display:flex;
+  align-items:center;
+  justify-content:center;
+
+  border-radius:8px;
+  cursor:pointer;
+
+  transition:0.2s ease;
+
+  margin-left:6px; /* pequeño espacio del panel */
+}
+
+.boton-lateral:hover{
+  background:#2a3145;
+  color:#00e0ff;
+}
+
+.boton-lateral span{
+  font-size:18px;
+  font-weight:bold;
+}
+
+/* =========================================
+   GRUPOS
+========================================= */
+
+.grupo{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+}
+
+.titulo-grupo{
+  font-size:11px;
+  letter-spacing:1px;
+  color:#9ca3af;
+  padding-bottom:6px;
+  border-bottom:1px solid rgba(255,255,255,0.08);
+}
+
+/* =========================================
+   BOTONES GENERALES
+========================================= */
+
+.btn-lateral{
+  padding:9px 8px;
+  border-radius:10px;
+  border:1px solid #2c344a;
+
+  background:linear-gradient(145deg,#1c2233,#232a3d);
+  color:#cbd5e1;
+
+  font-size:12px;
+  font-weight:600;
+  letter-spacing:0.5px;
+
+  cursor:pointer;
+  transition:all 0.25s ease;
+}
+
+.btn-lateral:hover{
+  border-color:#3b82f6;
+  color:white;
+  transform:translateY(-2px);
+}
+
+/* =========================================
+   LANDING PRINCIPALES EN FILA
+========================================= */
+
+.landing-principales{
+  display:flex;
+  flex-direction:row;
+  gap:8px;
+}
+
+/* Todos iguales y en fila */
+.landing-principales .landing-main{
+  flex:1;
+  padding:8px 6px;
+  font-size:11px;
+  text-align:center;
+}
+
+/* =========================================
+   ESTADOS ACTIVOS
+========================================= */
+
+/* CLEARED - VERDE */
+
+.landing-main.activo:not(.touch):not(.goaround){
+  background:linear-gradient(145deg,#065f46,#047857);
+  border-color:#10b981;
+  color:#ecfdf5;
+  box-shadow:0 0 12px rgba(16,185,129,0.5);
+}
+
+/* TOUCH & GO - AZUL */
+
+.landing-main.touch.activo{
+  background:linear-gradient(145deg,#1e40af,#2563eb);
+  border-color:#3b82f6;
+  color:#eff6ff;
+  box-shadow:0 0 12px rgba(59,130,246,0.5);
+}
+
+/* GO AROUND - ROJO */
+
+.landing-main.goaround.activo{
+  background:linear-gradient(145deg,#7f1d1d,#b91c1c);
+  border-color:#ef4444;
+  color:#fef2f2;
+  box-shadow:0 0 12px rgba(239,68,68,0.5);
+}
+
+/* =========================================
+   SUB BOTONES CLEARED (A-B-C-D-E)
+========================================= */
+
+.landing-opciones{
+  display:flex;
+  gap:6px;
+  margin-top:8px;
+
+  max-height:0;
+  overflow:hidden;
+  opacity:0;
+  transition:all 0.25s ease;
+}
+
+.landing-opciones.activo{
+  max-height:80px;
+  opacity:1;
+}
+
+/* MINI BOTONES */
+
+.mini-btn{
+  flex:1;
+  padding:6px 4px;
+
+  border-radius:8px;
+  border:1px solid #2c344a;
+
+  background:linear-gradient(145deg,#141a28,#1c2233);
+  color:#94a3b8;
+
+  font-size:11px;
+  font-weight:600;
+
+  cursor:pointer;
+  transition:all 0.2s ease;
+}
+
+.mini-btn:hover{
+  border-color:#10b981;
+  color:#e6fffa;
+  transform:translateY(-1px);
+}
+
+.mini-btn.activo{
+  background:linear-gradient(145deg,#065f46,#047857);
+  border-color:#10b981;
+  color:#ecfdf5;
+  box-shadow:0 0 8px rgba(16,185,129,0.45);
+}
+
+/* =========================================
+   ICONO AERONAVE
+========================================= */
+
+.icon-wrapper{
+  width:80px;
+  height:70px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+
+.icon-aircraft{
+  font-size:26px;
+  transform-origin:center center;
+  transition:transform 0.08s linear;
+}
+
+.callsign-label{
+  position:absolute;
+  bottom:-18px;
+  font-size:11px;
+  font-weight:bold;
+  color:white;
+  background:black;
+  padding:2px 5px;
+  border-radius:4px;
+  white-space:nowrap;
+}
+
+.status-label{
+  position:absolute;
+  top:-16px;
+  font-size:10px;
+  font-weight:bold;
+  color:white;
+  background:blue;
+  padding:2px 4px;
+  border-radius:4px;
+  display:none;
+}
+
+
+/* =========================================
+   VARIOS  toggle FAB
+========================================= */
+
+#fabContainer{
+  position:fixed;
+  bottom:25px;
+  right:25px;
+  z-index:3000;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+}
+
+/* BOTÓN PRINCIPAL */
+
+#fabMain{
+  width:55px;
+  height:55px;
+  border-radius:50%;
+  border:none;
+
+  background:#1f2433;
+  color:#00e0ff;
+  font-size:28px;
+  cursor:pointer;
+
+  box-shadow:0 8px 20px rgba(0,0,0,0.6);
+  transition:0.3s ease;
+}
+
+#fabMain:hover{
+  background:#2a3145;
+  transform:scale(1.1);
+}
+
+/* BOTONES SECUNDARIOS */
+
+.fab-options{
+  display:flex;
+  flex-direction:column;
+  gap:10px;
+  margin-bottom:15px;
+
+  opacity:0;
+  pointer-events:none;
+  transform:translateY(20px);
+  transition:all 0.3s ease;
+}
+
+.fab-options.active{
+  opacity:1;
+  pointer-events:auto;
+  transform:translateY(0);
+}
+
+.fab-btn{
+  width:45px;
+  height:45px;
+  border-radius:50%;
+  border:none;
+
+  background:#232a3d;
+  color:#aaa;
+  font-size:14px;
+  cursor:pointer;
+
+  box-shadow:0 5px 15px rgba(0,0,0,0.5);
+  transition:0.2s ease;
+}
+
+.fab-btn:hover{
+  background:#2a3145;
+  color:#00e0ff;
 }
