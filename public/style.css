@@ -85,7 +85,7 @@ body {
 
 /* Estado cerrado */
 #sidebar.closed {
-    transform: translateX(-250px);
+    transform: translateX(-280px);
 }
 
 
@@ -174,11 +174,6 @@ body {
     box-shadow: 2px 2px 8px rgba(0,0,0,0.4);
 }
 
-
-#sidebar.closed + #map + #sidebarToggle {
-    left: 10px;
-}
-
 /* ===============================
    MAPA
 ================================ */
@@ -194,5 +189,5 @@ body {
 
 /* Cuando sidebar está cerrado */
 #sidebar.closed ~ #map {
-    left: 30px;
+    left: 0;
 }
