@@ -1,48 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="es">
 <head>
     <meta charset="utf-8" />
-    <title>Seleccionar Sala</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Seleccionar Sala | Simulador ATC</title>
 
-    <!-- ===============================
-         CSS PRINCIPAL
-    =============================== -->
     <link rel="stylesheet" href="style.css">
 </head>
 
-<body>
+<body class="landing-body">
 
-    <!-- ===============================
-         CONTENEDOR PRINCIPAL
-    =============================== -->
-    <div class="container">
+    <div class="landing-container">
 
-        <h1>Simulador de Vuelo</h1>
+        <h1>SIMULADOR ATC</h1>
 
-        <!-- ===============================
-             SECCIÓN SALAS
-        =============================== -->
         <div class="room-section">
 
-            <!-- 🔹 AGREGÁ MÁS INPUTS O CONTROLES AQUÍ -->
-            <input type="text" id="roomInput" placeholder="Nombre de la sala">
+            <input 
+                type="text" 
+                id="roomInput" 
+                placeholder="Nombre de la sala"
+                autocomplete="off"
+            >
 
-            <button id="joinBtn">Unirse</button>
+            <button id="joinBtn">
+                UNIRSE
+            </button>
 
         </div>
 
-        <!-- 🔹 AGREGÁ MÁS PANELES AQUÍ (estadísticas, login, etc.) -->
-
     </div>
 
-    <!-- ===============================
-         SCRIPTS
-    =============================== -->
     <script>
         document.getElementById("joinBtn").addEventListener("click", () => {
-            const room = document.getElementById("roomInput").value || "sala1";
+            const room = document.getElementById("roomInput").value.trim() || "sala1";
             localStorage.setItem("room", room);
-            window.location.href = "simulador.html";
+            window.location.href = "/simulador.html";
+        });
+
+        // Enter para unirse
+        document.getElementById("roomInput").addEventListener("keypress", (e) => {
+            if (e.key === "Enter") {
+                document.getElementById("joinBtn").click();
+            }
         });
     </script>
 

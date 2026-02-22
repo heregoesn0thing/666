@@ -2,14 +2,16 @@
 // VARIABLES GLOBALES CLIENTE
 // ===============================
 
+let fabCreateMode = false;
+let fabDeleteMode = false;
+let markers = {};
+let myPlaneCount = 0;
+let taxiMode = null;
+
 const GLOBAL_POINTS = {
     ARP_SPSO: {
         lat: -13.744800,
         lng: -76.220411
-    },
-    VOR_SCO: {
-        lat: -13.738611,
-        lng: -76.212778
     }
 };
 
@@ -18,7 +20,6 @@ const GLOBAL_POINTS = {
 // ===============================
 
 const socket = io();
-
 let room = localStorage.getItem("room") || "sala1";
 socket.emit("joinRoom", room);
 
@@ -46,93 +47,33 @@ const planeIcon = L.icon({
 });
 
 // ===============================
-// ESTADO LOCAL
-// ===============================
-
-let markers = {};
-let myPlaneCount = 0;
-
-let createMode = false;
-let deleteMode = false;
-
-const createBtn = document.getElementById("createPlaneBtn");
-const deleteBtn = document.getElementById("deletePlaneBtn");
-
-// ===============================
-// BOTONES
-// ===============================
-const showVorBtn = document.getElementById("showVorBtn");
-
-showVorBtn.addEventListener("click", () => {
-    console.log("Mostrar VOR");
-});
-// ===============================
-// TOGGLE PANEL IZQUIERDO
-// ===============================
-
-function togglePanelIzq() {
-  const panel = document.getElementById("panelLateralIzq");
-  const icono = document.getElementById("iconoLateral");
-
-  panel.classList.toggle("cerrado");
-
-  if (panel.classList.contains("cerrado")) {
-    icono.innerHTML = "‹";
-  } else {
-    icono.innerHTML = "›";
-  }
-}
-
-// ===============================
-// LANDING CONTROL
-// ===============================
-
-function togglePanelIzq(){
-    const panel = document.getElementById("panelLateralIzq");
-    panel.classList.toggle("activo");
-}
-
-function toggleCleared(btn){
-
-    const opciones = document.getElementById("landingOpciones");
-
-    btn.classList.toggle("activo");
-    opciones.classList.toggle("activo");
-}
-
-function activarPrincipal(btn){
-
-    document.querySelectorAll(".landing-main")
-        .forEach(b=>b.classList.remove("activo"));
-
-    btn.classList.add("activo");
-}
-
-function seleccionarSubOpcion(btn){
-
-    document.querySelectorAll(".mini-btn")
-        .forEach(b=>b.classList.remove("activo"));
-
-    btn.classList.add("activo");
-}
-
-
-
-
-
-// ===============================
-// MAP CLICK
+// CLICK EN MAPA
 // ===============================
 
 map.on("click", function(e) {
 
-    if (!createMode) return;
+    if (fabCreateMode) {
+        socket.emit("createPlane", {
+            lat: e.latlng.lat,
+            lng: e.latlng.lng
+        });
+        return;
+    }
 
-    socket.emit("createPlane", {
-        lat: e.latlng.lat,
-        lng: e.latlng.lng
-    });
+    if (taxiMode === "create") {
 
+        const planeId = Object.keys(markers)[0];
+        if (!planeId) return;
+
+        socket.emit("command", {
+            type: "ADD_ROUTE_POINT",
+            planeId: planeId,
+            point: {
+                lat: e.latlng.lat,
+                lng: e.latlng.lng
+            }
+        });
+    }
 });
 
 // ===============================
@@ -141,11 +82,12 @@ map.on("click", function(e) {
 
 socket.on("state", (planesByUser) => {
 
+    // 🔄 Limpiar marcadores actuales
     for (let key in markers) {
         map.removeLayer(markers[key]);
     }
-    markers = {};
 
+    markers = {};
     myPlaneCount = 0;
 
     for (let userId in planesByUser) {
@@ -157,79 +99,160 @@ socket.on("state", (planesByUser) => {
                 {
                     icon: planeIcon,
                     rotationAngle: plane.heading,
-                    draggable: userId === socket.id
+                    draggable: userId === socket.id // 🔥 SOLO TU AVIÓN
                 }
             ).addTo(map);
 
             markers[plane.id] = marker;
 
-            // DRAG
+            // ============================
+            // DRAG CONTROLADO POR SERVIDOR
+            // ============================
+
             if (userId === socket.id) {
+
                 marker.on("dragend", (e) => {
 
                     const pos = e.target.getLatLng();
 
-                    socket.emit("movePlane", {
-                        id: plane.id,
+                    socket.emit("command", {
+                        type: "DRAG_PLANE",
+                        planeId: plane.id,
                         lat: pos.lat,
                         lng: pos.lng
                     });
                 });
             }
 
+            // ============================
             // DELETE
+            // ============================
+
             marker.on("click", () => {
-                if (deleteMode && userId === socket.id) {
+                if (fabDeleteMode && userId === socket.id) {
                     socket.emit("deletePlane", plane.id);
                 }
             });
-
         });
 
+        // ============================
+        // MOSTRAR / OCULTAR BOTÓN DELETE
+        // ============================
+
         if (userId === socket.id) {
+
             myPlaneCount = planesByUser[userId].length;
+
+            const fabDeleteBtn = document.getElementById("fabDeletePlane");
+
+            if (fabDeleteBtn) {
+                if (myPlaneCount > 0) {
+                    fabDeleteBtn.classList.remove("hidden");
+                } else {
+                    fabDeleteBtn.classList.add("hidden");
+                    fabDeleteMode = false;
+                }
+            }
         }
     }
 });
 
 // ===============================
-// 🔹 AGREGÁ AQUÍ TUS socket.on NUEVOS
+// DOM READY
 // ===============================
-
-// socket.on("nuevoEvento", (data) => {
-//     ...
-// });
-
-// ===============================
-// 🔹 AGREGÁ AQUÍ TUS socket.emit MANUALES
-// ===============================
-
-// socket.emit("miEvento", {...});
-// 
-
-// ============DOC==================
-
-/* =========================================
-   FAB - BOTÓN FLOTANTE
-========================================= */
 
 document.addEventListener("DOMContentLoaded", () => {
 
     const fabMain = document.getElementById("fabMain");
     const fabOptions = document.getElementById("fabOptions");
+    const fabCreateBtn = document.getElementById("fabCreatePlane");
+    const fabDeleteBtn = document.getElementById("fabDeletePlane");
 
-    if (!fabMain || !fabOptions) {
-        console.log("FAB no encontrado en el DOM");
-        return;
+    if (fabMain && fabOptions) {
+        fabMain.addEventListener("click", () => {
+            fabOptions.classList.toggle("active");
+            fabMain.textContent =
+                fabOptions.classList.contains("active") ? "×" : "+";
+        });
     }
 
-    fabMain.addEventListener("click", () => {
+    if (fabCreateBtn) {
+        fabCreateBtn.addEventListener("click", () => {
+            fabCreateMode = !fabCreateMode;
+            fabCreateBtn.classList.toggle("activo");
+            fabDeleteMode = false;
+        });
+    }
 
-        fabOptions.classList.toggle("active");
+    if (fabDeleteBtn) {
+        fabDeleteBtn.addEventListener("click", () => {
 
-        fabMain.textContent =
-            fabOptions.classList.contains("active") ? "×" : "+";
+            fabDeleteMode = !fabDeleteMode;
+            fabDeleteBtn.classList.toggle("activo");
 
-    });
+            fabCreateMode = false;
+            if (fabCreateBtn) {
+                fabCreateBtn.classList.remove("activo");
+            }
+        });
+    }
+
+    // ===============================
+    // TAXI CONTROL
+    // ===============================
+
+    const taxiCreate = document.getElementById("taxiCreate");
+    const taxiStart = document.getElementById("taxiStart");
+    const taxiHold = document.getElementById("taxiHold");
+
+    function resetTaxiButtons(){
+        [taxiCreate, taxiStart, taxiHold].forEach(btn=>{
+            if(btn) btn.classList.remove("activo");
+        });
+    }
+
+    if (taxiCreate) {
+        taxiCreate.addEventListener("click", () => {
+
+            resetTaxiButtons();
+            taxiCreate.classList.add("activo");
+            taxiMode = "create";
+        });
+    }
+
+    if (taxiStart) {
+        taxiStart.addEventListener("click", () => {
+
+            const planeId = Object.keys(markers)[0];
+            if (!planeId) return;
+
+            resetTaxiButtons();
+            taxiStart.classList.add("activo");
+
+            socket.emit("command", {
+                type: "SET_STATE",
+                planeId: planeId,
+                state: "taxi"
+            });
+        });
+    }
+
+    if (taxiHold) {
+        taxiHold.addEventListener("click", () => {
+
+            const planeId = Object.keys(markers)[0];
+            if (!planeId) return;
+
+            resetTaxiButtons();
+            taxiHold.classList.add("activo");
+
+            socket.emit("command", {
+                type: "SET_STATE",
+                planeId: planeId,
+                state: "holding"
+            });
+        });
+    }
 
 });
+

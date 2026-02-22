@@ -28,12 +28,26 @@
 
   <div class="contenido-lateral">
 
-    <!-- GRUPO GENERAL -->
-    <div class="grupo">
-      <div class="titulo-grupo">GENERAL</div>
-      <button class="btn-lateral" id="createPlaneBtn">Crear Aeronave</button>
-      <button class="btn-lateral" id="deletePlaneBtn">Eliminar Aeronave</button>
-    </div>
+   <!-- ===============================
+     GRUPO TAXI
+================================= -->
+<div class="grupo">
+  <div class="titulo-grupo">TAXI</div>
+
+  <div class="taxi-row">
+    <button class="btn-lateral taxi-btn" id="taxiCreate">
+      RUTA
+    </button>
+
+    <button class="btn-lateral taxi-btn" id="taxiStart">
+      START
+    </button>
+
+    <button class="btn-lateral taxi-btn" id="taxiHold">
+      HOLD
+    </button>
+  </div>
+</div>
 
     <!-- GRUPO LANDING CONTROL -->
     <div class="grupo">
@@ -55,7 +69,7 @@
 
         <button class="btn-lateral landing-main goaround"
                 onclick="activarPrincipal(this)">
-          GO AROUND
+          G. A.
         </button>
 
       </div>
@@ -82,10 +96,10 @@
 
     </div>
     <!-- ===============================
-     GRUPO OPERACIONES
+     GRUPO DEPARTURE
 ================================= -->
 <div class="grupo">
-  <div class="titulo-grupo">OPERACIONES</div>
+  <div class="titulo-grupo">DEPARTURE</div>
 
   <button class="btn-lateral">Iniciar Sim</button>
   <button class="btn-lateral">Pausar Sim</button>
@@ -94,10 +108,10 @@
 
 
 <!-- ===============================
-     GRUPO RADAR
+     GRUPO CIRCUIT
 ================================= -->
 <div class="grupo">
-  <div class="titulo-grupo">RADAR</div>
+  <div class="titulo-grupo">CIRCUIT</div>
 
   <button class="btn-lateral">Mostrar Tags</button>
   <button class="btn-lateral">Ocultar Tags</button>
@@ -106,10 +120,10 @@
 
 
 <!-- ===============================
-     GRUPO COMUNICACIONES
+     GRUPO MANUAL CONTROL
 ================================= -->
 <div class="grupo">
-  <div class="titulo-grupo">COMUNICACIONES</div>
+  <div class="titulo-grupo">MANUAL CONTROL</div>
 
   <button class="btn-lateral">Contact Tower</button>
   <button class="btn-lateral">Contact Approach</button>
@@ -131,10 +145,18 @@
 
 <div id="fabContainer">
 
-  <button id="fabMain">+</button>
+  <div class="fab-row">
+
+    <!-- Botón eliminar (oculto por defecto) -->
+    <button id="fabDeletePlane" class="fab-delete hidden">🗑</button>
+
+    <!-- Botón principal -->
+    <button id="fabMain">+</button>
+
+  </div>
 
   <div class="fab-options" id="fabOptions">
-    <button class="fab-btn">F1</button>
+    <button class="fab-btn" id="fabCreatePlane">✈️</button>
     <button class="fab-btn">F2</button>
     <button class="fab-btn">F3</button>
     <button class="fab-btn">F4</button>
