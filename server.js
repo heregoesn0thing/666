@@ -57,28 +57,47 @@ setInterval(() => {
 
             room.planes[userId].forEach(plane => {
 
-                if (plane.state === "taxi" && plane.route.length > 0) {
+                if (plane.state === "taxi") {
 
-                    const target = plane.route[0];
-                    const speed = 0.00005;
-
-                    const dLat = target.lat - plane.lat;
-                    const dLng = target.lng - plane.lng;
-
-                    const distance = Math.sqrt(dLat*dLat + dLng*dLng);
-
-                    if (distance < 0.00002) {
-                        plane.route.shift();
+                    if (plane.route.length === 0) {
+                        plane.state = "idle";
                     } else {
-                        plane.lat += (dLat / distance) * speed;
-                        plane.lng += (dLng / distance) * speed;
+                        const target = plane.route[0];
+                        const speed = 0.00005;
 
-                        plane.heading = calculateHeading(
-                            plane.lat,
-                            plane.lng,
-                            target.lat,
-                            target.lng
-                        );
+                        const dLat = target.lat - plane.lat;
+                        const dLng = target.lng - plane.lng;
+                        const distance = Math.sqrt(dLat*dLat + dLng*dLng);
+
+                        if (distance > 0) {
+                            plane.heading = calculateHeading(
+                                plane.lat,
+                                plane.lng,
+                                target.lat,
+                                target.lng
+                            );
+                        }
+
+                        if (distance <= speed) {
+                            plane.lat = target.lat;
+                            plane.lng = target.lng;
+                            plane.route.shift();
+
+                            if (plane.route.length === 0) {
+                                plane.state = "idle";
+                            } else {
+                                const nextTarget = plane.route[0];
+                                plane.heading = calculateHeading(
+                                    plane.lat,
+                                    plane.lng,
+                                    nextTarget.lat,
+                                    nextTarget.lng
+                                );
+                            }
+                        } else {
+                            plane.lat += (dLat / distance) * speed;
+                            plane.lng += (dLng / distance) * speed;
+                        }
                     }
                 }
 
@@ -106,6 +125,7 @@ io.on("connection", (socket) => {
         }
 
         socket.room = roomName;
+        socket.emit("globalPoints", GLOBAL_POINTS);
         socket.emit("state", rooms[roomName].planes);
     });
 
@@ -167,14 +187,37 @@ io.on("connection", (socket) => {
 
         case "ADD_ROUTE_POINT":
             plane.route.push(cmd.point);
+
+            if (plane.state === "taxi" && plane.route.length > 0) {
+                const target = plane.route[0];
+                plane.heading = calculateHeading(
+                    plane.lat,
+                    plane.lng,
+                    target.lat,
+                    target.lng
+                );
+            }
             break;
 
         case "SET_STATE":
             plane.state = cmd.state;
+
+            if (cmd.state === "taxi" && plane.route.length > 0) {
+                const target = plane.route[0];
+                plane.heading = calculateHeading(
+                    plane.lat,
+                    plane.lng,
+                    target.lat,
+                    target.lng
+                );
+            }
             break;
 
         case "CLEAR_ROUTE":
             plane.route = [];
+            if (plane.state === "taxi") {
+                plane.state = "idle";
+            }
             break;
 
         // =====================================

@@ -5,6 +5,10 @@
 let fabCreateMode = false;
 let fabDeleteMode = false;
 let markers = {};
+let routeLayers = [];
+let ownPlaneIds = [];
+let selectedPlaneId = null;
+let selectedPlaneRing = null;
 let myPlaneCount = 0;
 let taxiMode = null;
 
@@ -36,6 +40,48 @@ L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
     attribution: '© OpenStreetMap contributors'
 }).addTo(map);
 
+let vorRectangle = null;
+
+function drawVorBox(vorPoint) {
+    if (!vorPoint) return;
+
+    if (vorRectangle) {
+        map.removeLayer(vorRectangle);
+    }
+
+    const vorBoxHalfSize = 0.00035;
+    const vorBounds = [
+        [
+            vorPoint.lat - vorBoxHalfSize,
+            vorPoint.lng - vorBoxHalfSize
+        ],
+        [
+            vorPoint.lat + vorBoxHalfSize,
+            vorPoint.lng + vorBoxHalfSize
+        ]
+    ];
+
+    vorRectangle = L.rectangle(vorBounds, {
+        className: "vor-box"
+    }).addTo(map).bindTooltip("VOR SCO", {
+        permanent: false,
+        direction: "top",
+        className: "vor-label"
+    });
+}
+
+function getActivePlaneId() {
+    if (selectedPlaneId && ownPlaneIds.includes(selectedPlaneId)) {
+        return selectedPlaneId;
+    }
+
+    if (ownPlaneIds.length === 1) {
+        return ownPlaneIds[0];
+    }
+
+    return null;
+}
+
 // ===============================
 // ICONO AERONAVE
 // ===============================
@@ -62,8 +108,11 @@ map.on("click", function(e) {
 
     if (taxiMode === "create") {
 
-        const planeId = Object.keys(markers)[0];
-        if (!planeId) return;
+        const planeId = getActivePlaneId();
+        if (!planeId) {
+            alert("Selecciona una aeronave tuya con click antes de crear la ruta.");
+            return;
+        }
 
         socket.emit("command", {
             type: "ADD_ROUTE_POINT",
@@ -88,28 +137,54 @@ socket.on("state", (planesByUser) => {
     }
 
     markers = {};
+    routeLayers.forEach((layer) => map.removeLayer(layer));
+    routeLayers = [];
+    ownPlaneIds = [];
+    if (selectedPlaneRing) {
+        map.removeLayer(selectedPlaneRing);
+        selectedPlaneRing = null;
+    }
     myPlaneCount = 0;
 
     for (let userId in planesByUser) {
 
         planesByUser[userId].forEach(plane => {
+            const isOwnPlane = userId === socket.id;
+
+            if (isOwnPlane) {
+                ownPlaneIds.push(plane.id);
+            }
 
             const marker = L.marker(
                 [plane.lat, plane.lng],
                 {
                     icon: planeIcon,
                     rotationAngle: plane.heading,
-                    draggable: userId === socket.id // 🔥 SOLO TU AVIÓN
+                    draggable: isOwnPlane,
+                    zIndexOffset: plane.id === selectedPlaneId ? 1000 : 0
                 }
             ).addTo(map);
 
             markers[plane.id] = marker;
 
+            if (isOwnPlane && plane.route.length > 0) {
+                const routePath = [
+                    [plane.lat, plane.lng],
+                    ...plane.route.map((point) => [point.lat, point.lng])
+                ];
+
+                const routeLayer = L.polyline(routePath, {
+                    className: "taxi-route-line"
+                }).addTo(map);
+
+                routeLayers.push(routeLayer);
+            }
+
             // ============================
             // DRAG CONTROLADO POR SERVIDOR
             // ============================
 
-            if (userId === socket.id) {
+            if (isOwnPlane) {
 
                 marker.on("dragend", (e) => {
 
@@ -128,11 +203,16 @@ socket.on("state", (planesByUser) => {
             // DELETE
             // ============================
 
-            marker.on("click", () => {
-                if (fabDeleteMode && userId === socket.id) {
-                    socket.emit("deletePlane", plane.id);
-                }
-            });
+            if (isOwnPlane) {
+                marker.on("click", () => {
+                    if (fabDeleteMode) {
+                        socket.emit("deletePlane", plane.id);
+                        return;
+                    }
+
+                    selectedPlaneId = plane.id;
+                });
+            }
         });
 
         // ============================
@@ -155,6 +235,22 @@ socket.on("state", (planesByUser) => {
             }
         }
     }
+
+    if (selectedPlaneId && !ownPlaneIds.includes(selectedPlaneId)) {
+        selectedPlaneId = null;
+    }
+
+    if (selectedPlaneId && markers[selectedPlaneId]) {
+        selectedPlaneRing = L.circleMarker(markers[selectedPlaneId].getLatLng(), {
+            className: "selected-plane-ring",
+            radius: 22
+        }).addTo(map);
+    }
+});
+
+socket.on("globalPoints", (points) => {
+    if (!points || !points.VOR_SCO) return;
+    drawVorBox(points.VOR_SCO);
 });
 
 // ===============================
@@ -181,6 +277,11 @@ document.addEventListener("DOMContentLoaded", () => {
             fabCreateMode = !fabCreateMode;
             fabCreateBtn.classList.toggle("activo");
             fabDeleteMode = false;
+
+            if (fabCreateMode) {
+                resetTaxiButtons();
+                setTaxiMode(null);
+            }
         });
     }
 
@@ -211,23 +312,42 @@ document.addEventListener("DOMContentLoaded", () => {
         });
     }
 
+    function setTaxiMode(mode) {
+        taxiMode = mode;
+        map.getContainer().classList.toggle("taxi-route-mode", mode === "create");
+    }
+
     if (taxiCreate) {
         taxiCreate.addEventListener("click", () => {
 
+            fabCreateMode = false;
+            if (fabCreateBtn) {
+                fabCreateBtn.classList.remove("activo");
+            }
+
+            fabDeleteMode = false;
+            if (fabDeleteBtn) {
+                fabDeleteBtn.classList.remove("activo");
+            }
+
             resetTaxiButtons();
             taxiCreate.classList.add("activo");
-            taxiMode = "create";
+            setTaxiMode("create");
         });
     }
 
     if (taxiStart) {
         taxiStart.addEventListener("click", () => {
 
-            const planeId = Object.keys(markers)[0];
-            if (!planeId) return;
+            const planeId = getActivePlaneId();
+            if (!planeId) {
+                alert("Selecciona una aeronave tuya con click para iniciar taxi.");
+                return;
+            }
 
             resetTaxiButtons();
             taxiStart.classList.add("activo");
+            setTaxiMode(null);
 
             socket.emit("command", {
                 type: "SET_STATE",
@@ -240,11 +360,15 @@ document.addEventListener("DOMContentLoaded", () => {
     if (taxiHold) {
         taxiHold.addEventListener("click", () => {
 
-            const planeId = Object.keys(markers)[0];
-            if (!planeId) return;
+            const planeId = getActivePlaneId();
+            if (!planeId) {
+                alert("Selecciona una aeronave tuya con click para poner HOLD.");
+                return;
+            }
 
             resetTaxiButtons();
             taxiHold.classList.add("activo");
+            setTaxiMode(null);
 
             socket.emit("command", {
                 type: "SET_STATE",
@@ -255,4 +379,5 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
 });
+
 
